@@ -9,22 +9,22 @@ from cloudshell.core.logger.qs_logger import *
 
 # ===================================
 # ===================================
-class ReservationBase(object):
+class SandboxBase(object):
     def __init__(self, reservation_id, logger):
         try:
             self._logger = logger
             """:type : logging.Logger"""
             self.api_session = helpers.get_api_session()
             self.id = reservation_id
-            #self.environment_name = helpers.get_reservation_context_details().environment_name
+            #self.Blueprint_name = helpers.get_reservation_context_details().environment_name
             self.details = self.api_session.GetReservationDetails(self.id)
-            self.environment_name = self.details.ReservationDescription.TopologiesInfo[0].Name
+            self.Blueprint_name = self.details.ReservationDescription.TopologiesInfo[0].Name
             self.root_resources = []
             """:type : list[ResourceBase]"""
             self._GetRootResources()
 
         except:
-            err = "Failed to initialize the reservation. Unexpected error:" + \
+            err = "Failed to initialize the Sandbox. Unexpected error:" + \
                   str(sys.exc_info()[0])
             self.ReportError(err)
 
@@ -97,16 +97,16 @@ class ReservationBase(object):
     # ----------------------------------
     def ReloadDetails(self):
         """
-            Retrieves all details and parameters for a specified reservation, including its resources, routes and route segments, topologies, and reservation conflicts.
+            Retrieves all details and parameters for a specified Sandbox, including its resources, routes and route segments, topologies, and Sandbox conflicts.
         """
         try:
             self.details = self.api_session.GetReservationDetails(self.id)
             self._GetRootResources()
         except QualiError as qe:
-            err = "Failed to get the reservation's details. " + qe.__str__()
+            err = "Failed to get the Sandbox's details. " + qe.__str__()
             self.ReportError(err)
         except:
-            err = "Failed to get the reservation's details. Unexpected error: " + sys.exc_info()[0]
+            err = "Failed to get the Sandbox's details. Unexpected error: " + sys.exc_info()[0]
             self.ReportError(err)
 
     # ----------------------------------
@@ -117,7 +117,7 @@ class ReservationBase(object):
         """
         try:
             self.ReportInfo("Connecting routes",write_to_output)
-            self.api_session.ActivateTopology(self.id, self.environment_name)
+            self.api_session.ActivateTopology(self.id, self.Blueprint_name)
             self.ReportInfo("Routes connected",write_to_output)
         except CloudShellAPIError as error:
             err = "Failed to activate routes. " + error.message
@@ -135,7 +135,7 @@ class ReservationBase(object):
         :param list[InputNameValue] commandInputs:  Command Inputs - Specify a matrix of input names and values
         required for executing the command.
         :param bool printOutput:  Print Output - Defines whether to print the command output
-         in the reservation command output window.
+         in the Sandbox command output window.
         :rtype: CommandExecutionCompletedResultInfo
         """
         try:
@@ -146,9 +146,9 @@ class ReservationBase(object):
 
 # ===================================
 # ===================================
-class ReservationEx(ReservationBase):
+class SandboxEx(SandboxBase):
     def __init__(self, config_files_root,reservation_id, logger):
-        super(ReservationEx, self).__init__(reservation_id,logger)
+        super(SandboxEx, self).__init__(reservation_id,logger)
         self.config_files_root = config_files_root
 
     # ----------------------------------
@@ -162,14 +162,14 @@ class ReservationEx(ReservationBase):
     # Default value – Override
     # The command should fail if the configuration file name doesnt include “StartUp” or “Running”
     # config_stage - Gold, Base, Snapshot...
-    # A path to a config file will look like ROOT_DIR/CONFIG_STAGE/EnvironmentX/resourceY_ModelZ.cfg
+    # A path to a config file will look like ROOT_DIR/CONFIG_STAGE/BlueprintX/resourceY_ModelZ.cfg
     # e.g. tftp://configs/Gold/Large_Office/svl290-gg07-sw1_c3850.cfg
     # Base config is an exception. The blueprint's name is not in the path
     # e.g. tftp://configs/Base/svl290-gg07-sw1_c3850.cfg
     # ----------------------------------
     def LoadConfig(self, config_stage, config_type, restore_method="Override",write_to_output = True):
         """
-        Load the configuration from config files on the environment's devices
+        Load the configuration from config files on the Blueprint's devices
         :param str config_stage:  The stage of the config e.g Gold, Base
         :param str config_type:  Possible values - StartUp or Running
         :param str restore_method: Optional. Restore method. Can be Append or Override
@@ -177,7 +177,7 @@ class ReservationEx(ReservationBase):
         self.ReloadDetails()
         root_path=''
         if config_stage.lower() == 'gold' or config_stage.lower() == 'snapshot':
-            root_path =self.config_files_root + '/' + config_stage + '/' + self.environment_name + '/'
+            root_path =self.config_files_root + '/' + config_stage + '/' + self.Blueprint_name + '/'
         elif config_stage.lower() == 'base':
             root_path =self.config_files_root + '/' + config_stage + '/'
         for resource in self.root_resources:
@@ -266,7 +266,7 @@ class ReservationEx(ReservationBase):
         self.ReloadDetails()
         config_path = self.config_files_root + '/Snapshots/' + snapshot_name
 
-        #If the snapshot name already exist (on tftp + CS environments) - raise error
+        #If the snapshot name already exist (on tftp + CS Blueprints) - raise error
         try:
             snapshot_exist = True
             details =self.api_session.GetTopologyDetails(snapshot_name)
@@ -276,7 +276,7 @@ class ReservationEx(ReservationBase):
             #raise QualiError(self.id, "Snapshot " +snapshot_name + " already exist. Please select a different name.")
             err = "Snapshot " +snapshot_name + " already exist. Please select a different name."
             self.ReportError(err,write_to_output)
-        # save the current reservation as a new environment with the given snapshot name
+        # save the current Sandbox as a new Blueprint with the given snapshot name
         self.api_session.SaveReservationAsTopology(self.id, topologyName=snapshot_name,includeInactiveRoutes=True)
 
         # check - do I need to create the snapshot folder on the tfp server if it doesn't exist?
@@ -296,9 +296,9 @@ class ReservationEx(ReservationBase):
 
 
     # ----------------------------------
-    #Is this reservation originates from a snapshot environment?
+    #Is this Sandbox originates from a snapshot Blueprint?
     # ----------------------------------
     def IsSnapshot(self):
-        #check if there is a directory with the environment's name under the snapshots dir
-        envDir = self.config_files_root + '/Snapshots/' + self.environment_name
+        #check if there is a directory with the Blueprint's name under the snapshots dir
+        envDir = self.config_files_root + '/Snapshots/' + self.Blueprint_name
         return os.path.isdir(envDir)

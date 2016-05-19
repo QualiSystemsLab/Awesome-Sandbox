@@ -104,7 +104,7 @@ class ResourceBase(object):
         :param list[InputNameValue] commandInputs:  Command Inputs - Specify a matrix of input names and values
         required for executing the command.
         :param bool printOutput:  Print Output - Defines whether to print the command output
-         in the reservation command output window.
+         in the Sandbox command output window.
         :rtype: CommandExecutionCompletedResultInfo
         """
         # check the command exists on the device
