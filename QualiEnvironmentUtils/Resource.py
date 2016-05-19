@@ -119,7 +119,7 @@ class ResourceBase(object):
         if self.commands.__sizeof__() > 0:
             # Run executeCommand with the restore command and its params (ConfigPath,RestoreMethod)
             try:
-                return helpers.get_api_session().ExecuteCommand(reservation_id, self.name, 'Resource', commandName,
+                return self.api_session.ExecuteCommand(reservation_id, self.name, 'Resource', commandName,
                                                          commandInputs, printOutput)
             except CloudShellAPIError as error:
                 raise QualiError(self.name, error.message)

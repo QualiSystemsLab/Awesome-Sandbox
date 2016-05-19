@@ -147,9 +147,17 @@ class SandboxBase(object):
 # ===================================
 # ===================================
 class SandboxEx(SandboxBase):
-    def __init__(self, config_files_root,reservation_id, logger):
+    def __init__(self, reservation_id, logger):
         super(SandboxEx, self).__init__(reservation_id,logger)
-        self.config_files_root = config_files_root
+        found_tftp_server = False
+        for resource in self.root_resources:
+            if resource.model == 'Generic TFTP server':
+                tftp_server_destination_path = resource.GetAttribute("TFTP path")
+                self.config_files_root = 'tftp://' + resource.address + "/" + tftp_server_destination_path
+                found_tftp_server=True
+                break
+        if not found_tftp_server:
+            self.ReportError("Failed to find a TFTP server",writeToOutputWindow=True)
 
     # ----------------------------------
     # LoadNetworkConfig(ResourceName,config_type, RestoreMethod=Override)
