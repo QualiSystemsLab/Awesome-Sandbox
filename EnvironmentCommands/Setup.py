@@ -1,4 +1,4 @@
-from QualiEnvironmentUtils.Reservation import *
+from QualiEnvironmentUtils.Sandbox import *
 
 dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'e84d2103-36e1-404f-aa0d-45ed6d4f84ab',
                             server_address='localhost', cloudshell_api_port='8029')
