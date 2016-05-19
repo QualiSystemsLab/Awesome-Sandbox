@@ -23,10 +23,18 @@ class ResourceBase(object):
             self.api_session = helpers.get_api_session()
             self.details = self.api_session.GetResourceDetails(resource_full_path)
             self.name = self.details.Name
+            self.address = self.details.Address
             self.model = self.details.ResourceModelName
             self.commands = self.api_session.GetResourceCommands(resource_full_path).Commands
             self.attributes = self.details.ResourceAttributes
 
+    # -----------------------------------------
+    # -----------------------------------------
+    def GetAttribute(self, attribute_name):
+        for attribute in self.attributes:
+            if attribute.Name == attribute_name:
+                return attribute.Value
+        raise QualiError(self.name, "Attribute: " + attribute_name + " not found")
     # -----------------------------------------
     # implement the command to get the neighbors and their ports
     # will return a dictionary of device's name and its port
