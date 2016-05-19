@@ -1,4 +1,4 @@
-from QualiEnvironmentUtils.Reservation import *
+from QualiEnvironmentUtils.Sandbox import *
 
 dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '6d200cf7-6448-41fe-b9ed-5e4b363ccefb',
                             server_address='localhost', cloudshell_api_port='8029')
@@ -10,14 +10,12 @@ reservation_id=helpers.get_reservation_context_details().id
 
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='SaveSnapshot')
-tftp_server_resource = ResourceBase('TFTP Server')
-tftp_server_destination_path =tftp_server_resource.GetAttribute("TFTP path")
 
-reservation = ReservationEx('tftp_server_resource://' + tftp_server_resource.address + "/" + tftp_server_destination_path, reservation_id, logger)
-reservation.ClearResourcesStatus()
+sandbox = SandboxEx(reservation_id, logger)
+sandbox.ClearResourcesStatus()
 try:
     #todo: get the snapshot's name as a parameter from the user
-    reservation.SaveSnapshot('test1','Running')
+    sandbox.SaveSnapshot('test1', 'Running')
 except QualiError as qe:
     print("Setup failed. " + qe.__str__())
 except:

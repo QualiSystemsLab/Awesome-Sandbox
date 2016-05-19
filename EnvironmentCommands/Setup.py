@@ -1,6 +1,6 @@
 from QualiEnvironmentUtils.Sandbox import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'e84d2103-36e1-404f-aa0d-45ed6d4f84ab',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '8f65ecb7-aa00-405a-9be6-a89bee3a10cc',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -10,22 +10,19 @@ reservation_id=helpers.get_reservation_context_details().id
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='Setup')
 
-tftp_server_resource = ResourceBase('TFTP Server')
-tftp_server_destination_path =tftp_server_resource.GetAttribute("TFTP path")
-
-reservation = ReservationEx('tftp_server_resource://' + tftp_server_resource.address + "/" + tftp_server_destination_path, reservation_id, logger)
+sandbox = SandboxEx(reservation_id, logger)
 try:
-    reservation.ClearResourcesStatus()
-    if reservation.IsSnapshot():
-        reservation.LoadConfig('Snapshots', 'Running')
+    sandbox.ClearResourcesStatus()
+    if sandbox.IsSnapshot():
+        sandbox.LoadConfig('Snapshots', 'Running')
     else:
-        reservation.LoadConfig('Gold', 'Running')
+        sandbox.LoadConfig('Gold', 'Running')
     # call activateRoutes
-    reservation.WriteMessageToOutput("Connecting routes")
-    reservation.ActivateRoutes()
-    reservation.WriteMessageToOutput("Routes connected")
+    sandbox.WriteMessageToOutput("Connecting routes")
+    sandbox.ActivateRoutes()
+    sandbox.WriteMessageToOutput("Routes connected")
     # Call RoutesValidation
- #   reservation.RoutesValidation()
+ #   sandbox.RoutesValidation()
 except QualiError as qe:
     logger.error("Setup failed. " + str(qe))
 except:
