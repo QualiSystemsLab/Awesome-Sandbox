@@ -1,6 +1,7 @@
 from QualiEnvironmentUtils.Sandbox import *
+from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '8f65ecb7-aa00-405a-9be6-a89bee3a10cc',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '18e5dd1f-aa63-493c-a72c-aa1809f4cb17',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -10,17 +11,17 @@ reservation_id=helpers.get_reservation_context_details().id
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='Setup')
 
-sandbox = SandboxEx(reservation_id, logger)
+sandbox = SandboxBase(reservation_id, logger)
+saveNRestoreTool = NetworkingSaveRestore(sandbox)
 try:
     sandbox.ClearResourcesStatus()
-    if sandbox.IsSnapshot():
-        sandbox.LoadConfig('Snapshots', 'Running')
+    if saveNRestoreTool.IsSnapshot():
+        saveNRestoreTool.LoadConfig(config_stage='Snapshots',config_type= 'Running',ignore_models=['Generic TFTP server'])
     else:
-        sandbox.LoadConfig('Gold', 'Running')
+        saveNRestoreTool.LoadConfig(config_stage='Gold', config_type= 'Running',ignore_models=['Generic TFTP server'])
     # call activateRoutes
-    sandbox.WriteMessageToOutput("Connecting routes")
     sandbox.ActivateRoutes()
-    sandbox.WriteMessageToOutput("Routes connected")
+
     # Call RoutesValidation
  #   sandbox.RoutesValidation()
 except QualiError as qe:

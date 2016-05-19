@@ -128,17 +128,3 @@ class ResourceBase(object):
         else:
             raise QualiError(self.name, 'No commands were found')
 
-    # -----------------------------------------
-    # -----------------------------------------
-    def IsRunRoutesValidationOn(self):
-        """
-        Look for the attribute indicating if this device requires route validation
-        :rtype: bool
-        """
-        for attr in self.attributes:
-            if attr.Name == 'RunRoutesValidation':
-                if attr.Value == "True":
-                    return True
-                else:
-                    return False
-            return False
