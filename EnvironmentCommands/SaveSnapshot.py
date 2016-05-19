@@ -10,10 +10,10 @@ reservation_id=helpers.get_reservation_context_details().id
 
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='SaveSnapshot')
-tftp = ResourceBase('TFTP Server')
-tftp_path =tftp.GetAttribute("TFTP path")
+tftp_server_resource = ResourceBase('TFTP Server')
+tftp_server_destination_path =tftp_server_resource.GetAttribute("TFTP path")
 
-reservation = ReservationEx('tftp://' + tftp.address + "/" + tftp_path,reservation_id, logger)
+reservation = ReservationEx('tftp_server_resource://' + tftp_server_resource.address + "/" + tftp_server_destination_path, reservation_id, logger)
 reservation.ClearResourcesStatus()
 try:
     #todo: get the snapshot's name as a parameter from the user
