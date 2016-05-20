@@ -13,7 +13,7 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 
 sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
-sandbox.ClearResourcesStatus()
+sandbox.clear_all_resources_live_status()
 try:
     #todo: get the snapshot's name as a parameter from the user
     sandbox.SaveSandboxAsBlueprint('test1')
