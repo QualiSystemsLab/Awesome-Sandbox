@@ -1,4 +1,4 @@
-from QualiEnvironmentUtils.Sandbox import *
+from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
 dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '6d200cf7-6448-41fe-b9ed-5e4b363ccefb',
                             server_address='localhost', cloudshell_api_port='8029')
@@ -11,14 +11,16 @@ reservation_id=helpers.get_reservation_context_details().id
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='SaveSnapshot')
 
-sandbox = SandboxEx(reservation_id, logger)
+sandbox = SandboxBase(reservation_id, logger)
+saveNRestoreTool = NetworkingSaveRestore(sandbox)
 sandbox.ClearResourcesStatus()
 try:
     #todo: get the snapshot's name as a parameter from the user
-    sandbox.SaveSnapshot('test1', 'Running')
+    sandbox.SaveSandboxAsBlueprint('test1')
+    saveNRestoreTool.SaveConfig(snapshot_name='test1',config_type='Running', ignore_models=['Generic TFTP server'])
 except QualiError as qe:
-    print("Setup failed. " + qe.__str__())
+    logger.error("Save snapshot failed. " + str(qe))
 except:
-    print ("Setup failed. Unexpected error:", sys.exc_info())
+    logger.error ("Save snapshot. Unexpected error:" + sys.exc_info())
 
 
