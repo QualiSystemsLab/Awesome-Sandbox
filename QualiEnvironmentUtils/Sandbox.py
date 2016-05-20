@@ -84,7 +84,7 @@ class SandboxBase(object):
 
     # ----------------------------------
     # ----------------------------------
-    def ClearResourcesStatus(self):
+    def clear_all_resources_live_status(self):
         """
             Clear the live status from all the devices
         """

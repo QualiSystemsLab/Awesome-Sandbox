@@ -14,7 +14,7 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
 try:
-    sandbox.ClearResourcesStatus()
+    sandbox.clear_all_resources_live_status()
     if saveNRestoreTool.IsSnapshot():
         saveNRestoreTool.LoadConfig(config_stage='Snapshots',config_type= 'Running',ignore_models=['Generic TFTP server'])
     else:

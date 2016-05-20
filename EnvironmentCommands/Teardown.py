@@ -13,7 +13,7 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
 
-sandbox.ClearResourcesStatus()
+sandbox.clear_all_resources_live_status()
 try:
     saveNRestoreTool.LoadConfig(config_stage='Base', config_type= 'Running',ignore_models=['Generic TFTP server'])
 
