@@ -1,7 +1,7 @@
 from QualiEnvironmentUtils.Sandbox import *
 from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '2385544d-12c5-4667-9a1c-2d213b59fe03',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '732a57ce-800b-4fab-8d1b-70a4ec456cb9',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------

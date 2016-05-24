@@ -20,6 +20,7 @@ class NetworkingSaveRestore():
                         self.config_files_root = 'tftp://' + resource.address + "/" + tftp_server_destination_path
                         break
         if tftp_server_destination_path =="":
+            self.sandbox.report_error("Failed to find the network's tftp path", raise_error=True, write_to_output_window=False)
 
 
     # ----------------------------------
@@ -70,10 +71,12 @@ class NetworkingSaveRestore():
                     self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Online')
                 except QualiError as qe:
                     err = "Failed to load configuration for device " + resource.name + ". " + str(qe)
+                    self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
                     self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Error')
                 except:
                     err = "Failed to load configuration for device " + resource.name + \
                           ". Unexpected error: " + str(sys.exc_info()[0])
+                    self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
                     self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Error')
 
 
@@ -103,9 +106,11 @@ class NetworkingSaveRestore():
 
                 except QualiError as qe:
                     err = "Failed to save configuration for device " + resource.name + ". " + str(qe)
+                    self.sandbox.report_error(err, write_to_output_window=write_to_output)
                 except:
                     err = "Failed to save configuration for device " + resource.name + \
                           ". Unexpected error: " + str(sys.exc_info()[0])
+                    self.sandbox.report_error(err, write_to_output_window=write_to_output)
 
 
 
