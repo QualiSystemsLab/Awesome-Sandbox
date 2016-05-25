@@ -1,7 +1,7 @@
 from QualiEnvironmentUtils.Sandbox import *
 from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '732a57ce-800b-4fab-8d1b-70a4ec456cb9',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '1c12ace2-bf9e-4942-8fc0-31bde9515465',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -13,21 +13,18 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 
 sandbox = SandboxBase(reservation_id, logger)
 do_save_restore = True
-try:
-    saveNRestoreTool = NetworkingSaveRestore(sandbox)
-except QualiError:
-    do_save_restore = False
+saveNRestoreTool = NetworkingSaveRestore(sandbox)
 try:
     sandbox.clear_all_resources_live_status()
-    if do_save_restore:
-        # TODO- Get the config set name from the orchestration's params
-        config_set_name = ''
-        if saveNRestoreTool.is_snapshot():
-            saveNRestoreTool.load_config(config_stage='Snapshots', config_type='Running',
-                                         ignore_models=['Generic TFTP server'])
-        else:
-            saveNRestoreTool.load_config(config_stage='Gold', config_type='Running',
-                                         ignore_models=['Generic TFTP server'], config_set_name=config_set_name)
+
+    # TODO- Get the config set name from the orchestration's params
+    config_set_name = ''
+    if saveNRestoreTool.is_snapshot():
+        saveNRestoreTool.load_config(config_stage='Snapshots', config_type='Running',
+                                     ignore_models=['Generic TFTP server'])
+    else:
+        saveNRestoreTool.load_config(config_stage='Gold', config_type='Running',
+                                     ignore_models=['Generic TFTP server'], config_set_name=config_set_name)
 
     # call activate_all_routes_and_connectors
     sandbox.activate_all_routes_and_connectors()

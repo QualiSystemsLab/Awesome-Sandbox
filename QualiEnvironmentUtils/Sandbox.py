@@ -72,14 +72,10 @@ class SandboxBase(object):
         # Loop over all devices in the sandbox and add to a dictionary all root devices:
         for resource in resources:
             split_name = resource.Name.split('/')
-            resource_path = ''
-            if resource.FolderFullPath:
-                resource_path = resource.FolderFullPath + "/"
-            resource_path = resource_path + split_name[0]
-            root_resources_names_dict[split_name[0]] = resource_path
+            root_resources_names_dict[split_name[0]] = 1
         # instantiate a resource object for each root device
         for root_resource_name in root_resources_names_dict.keys():
-            root_resources.append(ResourceBase(root_resources_names_dict.get(root_resource_name)))
+            root_resources.append(ResourceBase(root_resource_name))
 
         return root_resources
 
@@ -91,7 +87,7 @@ class SandboxBase(object):
         """
         root_resources = self.get_root_resources()
         for resource in root_resources:
-            self.api_session.SetResourceLiveStatus(resource.full_path, '')
+            self.api_session.SetResourceLiveStatus(resource.name, '')
 
     # ----------------------------------
     # ----------------------------------
@@ -119,7 +115,7 @@ class SandboxBase(object):
             self.report_info(message="Connecting the connectors and routes", write_to_output_window=write_to_output)
             self.activate_connectors(write_to_output=False)
             self.activate_routes(write_to_output=False)
-            self.report_info(message="Connectors and routes connected", write_to_output_window=write_to_output)
+            self.report_info(message="Connectors and routes are connected", write_to_output_window=write_to_output)
         except CloudShellAPIError as error:
             err = "Failed to activate connectors and routes. " + error.message
             self.report_error(error_message=err, write_to_output_window=write_to_output)
