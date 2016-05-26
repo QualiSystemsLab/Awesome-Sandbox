@@ -13,14 +13,14 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 
 sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
-sandbox.ClearResourcesStatus()
+sandbox.clear_all_resources_live_status()
 try:
     #todo: get the snapshot's name as a parameter from the user
-    sandbox.SaveSandboxAsBlueprint('test1')
-    saveNRestoreTool.SaveConfig(snapshot_name='test1',config_type='Running', ignore_models=['Generic TFTP server'])
+    sandbox.save_sandbox_as_blueprint('test1')
+    saveNRestoreTool.save_config(snapshot_name='test1', config_type='Running', ignore_models=['Generic TFTP server'])
 except QualiError as qe:
     logger.error("Save snapshot failed. " + str(qe))
 except:
-    logger.error ("Save snapshot. Unexpected error:" + sys.exc_info())
+    logger.error ("Save snapshot. Unexpected error:" + str(sys.exc_info()))
 
 

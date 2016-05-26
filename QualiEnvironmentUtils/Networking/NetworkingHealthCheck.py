@@ -13,24 +13,26 @@ class NetworkingHealthCheck():
     # ----------------------------------
     # Set alias to valid/mismatch on routes that require validation
     # ----------------------------------
-    def RoutesValidation(self):
+    def routes_validation(self):
         """
         Set alias to valid/mismatch on routes that require validation
         """
         try:
             updated_routes = []
             """:type : list[UpdateRouteAliasRequest]"""
-            self.sandbox.ReloadDetails()
+
             # loop over the root resources and in case this is a device that requires route validation
             # set its Adjacent attribute with value
-            for root_rsc in self.sandbox.root_resources:
+            root_resources = self.sandbox.get_root_resources()
+            for root_rsc in root_resources:
                 # Check if this devices requires route validation
-                RunRoutesValidationAttr = root_rsc.GetAttribute('RunRoutesValidation')
+                RunRoutesValidationAttr = root_rsc.get_attribute('RunRoutesValidation')
                 if RunRoutesValidationAttr == 'True':
-                    root_rsc.GetNeighbors(self.id)
+                    root_rsc.get_neighbors(self.id)
             # go over the connectors list and validate the routes
-            for conn in self.sandbox.details.ReservationDescription.Connectors:
-                status = self.sandbox._GetRouteStatus(conn.Source, conn.Target)
+            details = self.sandbox.get_details()
+            for conn in details.ReservationDescription.Connectors:
+                status = self._get_route_status(conn.Source, conn.Target)
                 if status != "":
                     updated_routes.append(UpdateRouteAliasRequest(conn.Source, conn.Target, status))
 
@@ -38,14 +40,14 @@ class NetworkingHealthCheck():
             self.sandbox.api_session.UpdateRouteAliasesInReservation(self.id, updated_routes)
         except QualiError as qe:
             err = "Failed to validate routes. " + str(qe)
-            self.sandbox.ReportError(err)
+            self.sandbox.report_error(err)
         except:
-            err = "Failed to validate routes. Unexpected error: " + sys.exc_info()[0]
-            self.sandbox.ReportError(err)
+            err = "Failed to validate routes. Unexpected error: " + str(sys.exc_info()[0])
+            self.sandbox.report_error(err)
 
     # ----------------------------------
     # ----------------------------------
-    def _GetRouteStatus(self, resource1, resource2):
+    def _get_route_status(self, resource1, resource2):
         """
         Find if the route is valid. Valid means the two devices can see each other
         The Adjacent attribute on the port will hold the data of the other device's port connected to it
@@ -56,8 +58,8 @@ class NetworkingHealthCheck():
         # Routes are only validated between 2 devices that require validation
         source_resource = ResourceBase(resource1)
         target_resource = ResourceBase(resource2)
-        targetRunRoutesValidation = target_resource.GetAttribute('RunRoutesValidation')
-        sourceRunRoutesValidation = source_resource.GetAttribute('RunRoutesValidation')
+        targetRunRoutesValidation = target_resource.get_attribute('RunRoutesValidation')
+        sourceRunRoutesValidation = source_resource.get_attribute('RunRoutesValidation')
         if targetRunRoutesValidation == 'False' or not sourceRunRoutesValidation == 'False':
             return ""
         # check that the target value equals the value in the Adjacent attribute
