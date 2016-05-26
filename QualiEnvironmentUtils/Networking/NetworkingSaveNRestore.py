@@ -68,16 +68,16 @@ class NetworkingSaveRestore():
                     self.sandbox.report_info('Loading configuration for device: ' + resource.name +
                                                                      ' from:' + config_path, write_to_output)
                     resource.load_network_config(self.sandbox.id, config_path, config_type, restore_method)
-                    self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Online')
+                    self.sandbox.api_session.SetResourceLiveStatus(resource.name,'Online')
                 except QualiError as qe:
                     err = "Failed to load configuration for device " + resource.name + ". " + str(qe)
                     self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
-                    self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Error')
+                    self.sandbox.api_session.SetResourceLiveStatus(resource.name,'Error')
                 except:
                     err = "Failed to load configuration for device " + resource.name + \
                           ". Unexpected error: " + str(sys.exc_info()[0])
                     self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
-                    self.sandbox.api_session.SetResourceLiveStatus(resource.full_path,'Error')
+                    self.sandbox.api_session.SetResourceLiveStatus(resource.name,'Error')
 
 
     # ----------------------------------

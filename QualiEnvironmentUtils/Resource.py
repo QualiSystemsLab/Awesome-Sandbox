@@ -17,15 +17,14 @@ from QualiUtils import *
 # ===================================
 # ===================================
 class ResourceBase(object):
-    def __init__(self, resource_full_path):
-        if resource_full_path != "":
-            self.full_path = resource_full_path
+    def __init__(self, resource_name):
+        if resource_name != "":
             self.api_session = helpers.get_api_session()
-            self.details = self.api_session.GetResourceDetails(resource_full_path)
+            self.details = self.api_session.GetResourceDetails(resource_name)
             self.name = self.details.Name
             self.address = self.details.Address
             self.model = self.details.ResourceModelName
-            self.commands = self.api_session.GetResourceCommands(resource_full_path).Commands
+            self.commands = self.api_session.GetResourceCommands(resource_name).Commands
             self.attributes = self.details.ResourceAttributes
 
     # -----------------------------------------
