@@ -13,11 +13,11 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
 
-sandbox.ClearResourcesStatus()
+sandbox.clear_all_resources_live_status()
 try:
-    saveNRestoreTool.LoadConfig(config_stage='Base', config_type= 'Running',ignore_models=['Generic TFTP server'])
+    saveNRestoreTool.load_config(config_stage='Base', config_type='Running', ignore_models=['Generic TFTP server'])
 
 except QualiError as qe:
     logger.error("Teardown failed. " + str(qe))
 except:
-    logger.error("Teardown failed. Unexpected error:" + sys.exc_info()[0])
+    logger.error("Teardown failed. Unexpected error:" + str(sys.exc_info()[0]))

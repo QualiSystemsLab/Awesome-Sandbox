@@ -30,7 +30,7 @@ class ResourceBase(object):
 
     # -----------------------------------------
     # -----------------------------------------
-    def GetAttribute(self, attribute_name):
+    def get_attribute(self, attribute_name):
         for attribute in self.attributes:
             if attribute.Name == attribute_name:
                 return attribute.Value
@@ -39,22 +39,22 @@ class ResourceBase(object):
     # implement the command to get the neighbors and their ports
     # will return a dictionary of device's name and its port
     # -----------------------------------------
-    def GetNeighbors(self, reservation_id):
+    def get_neighbors(self, reservation_id):
         """
-        Launch the GetNeighbors command on the device
+        Launch the get_neighbors command on the device
         :param str reservation_id:  Reservation id.
         """
         # Run executeCommand with the getNeighbors command and its params (ConfigPath,RestoreMethod)
         try:
-            self.ExecuteCommand(reservation_id, 'GetNeighbors', printOutput=True)
+            self.execute_command(reservation_id, 'get_neighbors', printOutput=True)
         except QualiError as error:
             raise QualiError(self.name, "Failed to update neighbors: " + error.message)
         except:
-            raise QualiError(self.name, "Failed to update neighbors. Unexpected error:" + sys.exc_info()[0])
+            raise QualiError(self.name, "Failed to update neighbors. Unexpected error:" + str(sys.exc_info()[0]))
 
     # -----------------------------------------
     # -----------------------------------------
-    def LoadNetworkConfig(self, reservation_id, config_path, config_type, restore_method='Override'):
+    def load_network_config(self, reservation_id, config_path, config_type, restore_method='Override'):
         """
         Load config from a configuration file on the device
         :param str reservation_id:  Reservation id.
@@ -64,19 +64,19 @@ class ResourceBase(object):
         """
         # Run executeCommand with the restore command and its params (ConfigPath,RestoreMethod)
         try:
-            self.ExecuteCommand(reservation_id, 'Restore',
-                                commandInputs=[InputNameValue('source_file', str(config_path)),
+            self.execute_command(reservation_id, 'Restore',
+                                 commandInputs=[InputNameValue('source_file', str(config_path)),
                                                InputNameValue('clear_config', str(restore_method)),
                                                InputNameValue('config_type', str(config_type))],
-                                printOutput=True)
+                                 printOutput=True)
         except QualiError as qerror:
             raise QualiError(self.name, "Failed to load configuration: " + qerror.message)
         except:
-            raise QualiError(self.name, "Failed to load configuration. Unexpected error:" + sys.exc_info()[0])
+            raise QualiError(self.name, "Failed to load configuration. Unexpected error:" + str(sys.exc_info()[0]))
 
     # -----------------------------------------
     # -----------------------------------------
-    def SaveConfig(self, reservation_id, config_path, config_type):
+    def save_network_config(self, reservation_id, config_path, config_type):
         """
         Save config from the device
         :param str reservation_id:  Reservation id.
@@ -85,26 +85,22 @@ class ResourceBase(object):
         """
         # Run executeCommand with the restore command and its params (ConfigPath,RestoreMethod)
         try:
-#             self.ExecuteCommand(reservation_id, 'Save',
-#                                commandInputs=[InputNameValue('Configuration Type', str(config_type)),
-#                                               InputNameValue('Folder Path', str(config_path))],
-#                                printOutput=True)
-             self.ExecuteCommand(reservation_id, 'Save',
-                                commandInputs=[InputNameValue('ConfigurationType', str(config_type)),
+             self.execute_command(reservation_id, 'Save',
+                                  commandInputs=[InputNameValue('ConfigurationType', str(config_type)),
                                                InputNameValue('Path', str(config_path))],
-                                printOutput=True)
+                                  printOutput=True)
             #TODO?
             #check the output is the created file name
 
         except QualiError as qerror:
             raise QualiError(self.name, "Failed to load configuration: " + qerror.message)
         except:
-            raise QualiError(self.name, "Failed to load configuration. Unexpected error:" + sys.exc_info()[0])
+            raise QualiError(self.name, "Failed to load configuration. Unexpected error:" + str(sys.exc_info()[0]))
 
     # -----------------------------------------
     # -----------------------------------------
     # noinspection PyPep8Naming,PyDefaultArgument
-    def ExecuteCommand(self, reservation_id, commandName, commandInputs=[], printOutput=False):
+    def execute_command(self, reservation_id, commandName, commandInputs=[], printOutput=False):
         """
         Executes a command
         :param str reservation_id:  Reservation id.
