@@ -1,1 +1,0 @@
-Copy the QualiEnvironmentUtils directory under C:\Program Files (x86)\QualiSystems\CloudShell\Server\python\2.7.10\Lib\site-packages
