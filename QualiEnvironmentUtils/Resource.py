@@ -17,7 +17,7 @@ from QualiUtils import *
 # ===================================
 # ===================================
 class ResourceBase(object):
-    def __init__(self, resource_name):
+    def __init__(self, resource_name, resource_alias=''):
         if resource_name != "":
             self.api_session = helpers.get_api_session()
             self.details = self.api_session.GetResourceDetails(resource_name)
@@ -26,6 +26,8 @@ class ResourceBase(object):
             self.model = self.details.ResourceModelName
             self.commands = self.api_session.GetResourceCommands(resource_name).Commands
             self.attributes = self.details.ResourceAttributes
+            self.alias = resource_alias
+
 
     # -----------------------------------------
     # -----------------------------------------
@@ -34,6 +36,16 @@ class ResourceBase(object):
             if attribute.Name == attribute_name:
                 return attribute.Value
         raise QualiError(self.name, "Attribute: " + attribute_name + " not found")
+
+    # -----------------------------------------
+    # -----------------------------------------
+    def set_attribute_value(self, attribute_name, attribute_value):
+        try:
+            self.api_session.SetAttributeValue(resourceFullPath=self.name, attributeName=attribute_name,
+                                               attributeValue=attribute_value)
+        except CloudShellAPIError as error:
+            raise QualiError(self.name, "Attribute: " + attribute_name + " not found. " + error.message)
+
     # -----------------------------------------
     # implement the command to get the neighbors and their ports
     # will return a dictionary of device's name and its port
@@ -123,3 +135,7 @@ class ResourceBase(object):
         else:
             raise QualiError(self.name, 'No commands were found')
 
+    # -----------------------------------------
+    # -----------------------------------------
+    def set_address(self, address):
+        self.api_session.UpdateResourceAddress(resourceFullPath=self.name,resourceAddress=address)
