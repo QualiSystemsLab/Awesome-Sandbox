@@ -1,6 +1,7 @@
 # coding=utf-8
 from Sandbox import *
 import re
+
 # ===================================
 # ===================================
 class PoolManager(object):
@@ -51,3 +52,23 @@ class PoolManager(object):
                 message += 'Resource ' + resource_from_pool.Name + ' is in the pool, but could not be found in the sandbox. Please check\n'
         if message != '':
             raise QualiError(name=self.sandbox.id, message=message)
+
+
+    # -----------------------------------------
+    # Create a dictionary that will hold the data from the pool
+    # Key: Resource name.
+    # Value: A dictionary of the pool's values for the specific resource
+    # (Taken from the attributes on the sub-resource in the pool resource)
+    # -----------------------------------------
+    def pool_data_to_dict(self):
+        pool_data_dict = dict()
+        for resource_from_pool in self.pool_resource.details.ChildResources:
+            split_name = resource_from_pool.Name.split('/')
+            name_of_resource_from_pool = split_name[len(split_name)-1]
+            resource_attributes_dict = dict()
+            for attribute in resource_from_pool.ResourceAttributes:
+                resource_dict_key = 'configSetPool.' + name_of_resource_from_pool + '.' + attribute.Name
+                resource_attributes_dict[resource_dict_key] = attribute.Value
+            pool_data_dict[name_of_resource_from_pool] = resource_attributes_dict
+
+        return pool_data_dict

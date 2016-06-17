@@ -250,9 +250,9 @@ class SandboxBase(object):
     # -----------------------------------------
     # Return the pool resource of the sandbox, if found
     #  -----------------------------------------
-    def get_pool_resource(self):
+    def get_config_set_pool_resource(self):
         root_resources = self.get_root_resources()
         for resource in root_resources:
-                if resource.model == 'Generic Pool':
+                if resource.model.lower() == 'config set pool':
                     return resource
         return None

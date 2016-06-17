@@ -1,5 +1,5 @@
 __author__ = 'ayelet.a'
-
+import traceback
 import cloudshell.api.cloudshell_dev_helpers as dev
 import cloudshell.api.cloudshell_scripts_helpers as helpers
 from cloudshell.api.cloudshell_api import *
@@ -32,8 +32,9 @@ class ResourceBase(object):
     # -----------------------------------------
     # -----------------------------------------
     def get_attribute(self, attribute_name):
+        attribute_name = attribute_name.lower()
         for attribute in self.attributes:
-            if attribute.Name == attribute_name:
+            if attribute.Name.lower() == attribute_name:
                 return attribute.Value
         raise QualiError(self.name, "Attribute: " + attribute_name + " not found")
 

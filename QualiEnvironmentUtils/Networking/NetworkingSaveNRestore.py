@@ -3,6 +3,11 @@ from Sandbox import *
 from Networking.ConfigFileManager import *
 from Networking.PoolManager import *
 
+import tftpy
+
+#from TftpShared import *
+import tempfile
+
 class NetworkingSaveRestore():
     def __init__(self, sandbox):
         """
@@ -12,6 +17,7 @@ class NetworkingSaveRestore():
         self.sandbox = sandbox
         tftp_resource = self.sandbox.get_tftp_resource()
         if tftp_resource is not None:
+            self.tftp_address = tftp_resource.address
             tftp_server_destination_path = tftp_resource.get_attribute("TFTP Network configs path")
             if tftp_server_destination_path != "":
                 self.config_files_root = 'tftp://' + tftp_resource.address + "/" + tftp_server_destination_path
@@ -22,11 +28,12 @@ class NetworkingSaveRestore():
             self.sandbox.report_error("Failed to find a tftp resource in the sandbox", raise_error=True,
                                       write_to_output_window=False)
 
-        pool_resource = self.sandbox.get_pool_resource()
-        #update all the resources' attributes with the data from the pool
-        if pool_resource is not None:
-            pool_manager = PoolManager(sandbox = self.sandbox, pool_resource = pool_resource)
-            pool_manager.push_data_from_pool_to_sandbox()
+            # pool_resource = self.sandbox.get_config_set_pool_resource()
+            ##update all the resources' attributes with the data from the pool
+            # if pool_resource is not None:
+            #    pool_manager = PoolManager(sandbox = self.sandbox, pool_resource = pool_resource)
+            #    pool_manager.push_data_from_pool_to_sandbox()
+
     # ----------------------------------
     # load_network_config(ResourceName,config_type, RestoreMethod=Override)
     # ResourceName - The name of the resource we would like to load the config onto
@@ -54,10 +61,15 @@ class NetworkingSaveRestore():
         the nam of the set selected by the user
         :param list[str] ignore_models: Optional. Models that should be ignored and not load config on the device
         """
+        tftp_client = tftpy.TftpClient(self.tftp_address, 69)
+        config_set_pool_data = dict()
+        config_set_pool_resource = self.sandbox.get_config_set_pool_resource()
+        if config_set_pool_resource is not None:
+            config_set_pool_manager = PoolManager(sandbox=self.sandbox, pool_resource=config_set_pool_resource)
+            config_set_pool_data = config_set_pool_manager.pool_data_to_dict()
 
         config_file_mgr = ConfigFileManager(self.sandbox)
         root_path = ''
-        loaded_ip_address = ''
         if config_stage.lower() == 'gold' or config_stage.lower() == 'snapshot':
             root_path = self.config_files_root + '/' + config_stage + '/' + self.sandbox.Blueprint_name + '/'
             if config_set_name != '':
@@ -68,53 +80,48 @@ class NetworkingSaveRestore():
         """:type : list[ResourceBase]"""
         for resource in root_resources:
 
-            load_config_to_device = True
-            # check if the device is marked for not loading config during
-            try:
-                disable_load_config = resource.get_attribute("Disable Load Config")
-                if disable_load_config:
-                    load_config_to_device = False
-            except QualiError:  # if attribute not found then assume load config in enabled
-                pass
-            for ignore_model in ignore_models:
-                if resource.model.lower() == ignore_model.lower():
-                    load_config_to_device = False
-                    break
-            if load_config_to_device == True:
+            load_config_to_device = self._is_load_config_to_device(resource=resource, ignore_models=ignore_models)
+            if load_config_to_device:
                 try:
                     config_path = root_path + resource.alias + '_' + resource.model + '.cfg'
-                    #if originated from an abstract resource - create a concrete config file from the template
-                    #it will be saved under /temp/<SandboxId>/<Resource name>_<model>.cfg
-                    #tftp://configs/Gold/Large_Office/Set1/temp/477f8eb2-213b-4065-81c8-a78e1306274b/svl290-gg07-sw1_c3850.cfg
-                    is_resource_abstract = self.sandbox.is_abstract(resource.alias)
-                    if is_resource_abstract:
-                        concrete_file_path = root_path + 'temp/' + self.sandbox.id +'/'+ resource.name + '_' + \
+
+                    # Look for a template config file
+                    tmp_template_file = tempfile.NamedTemporaryFile(delete=False)
+                    tftp_template_config_path = root_path + resource.alias + '_' + resource.model + '.tm'
+                    tftp_template_config_path = tftp_template_config_path.replace('tftp://' + self.tftp_address + "/", '')
+                    tftp_template_config_path = tftp_template_config_path.replace(' ', '_')
+                    try:
+                        tftp_client.download(str(tftp_template_config_path), str(tmp_template_file.name))
+                        tmp_concrete_file = tempfile.NamedTemporaryFile(delete=False)
+                        config_file_mgr.create_concrete_config_from_template(tmp_template_file,
+                                                                             tmp_concrete_file,
+                                                                             config_set_pool_data)
+                        tmp_template_file.close()
+                        #tmp_template_file.delete()
+                        concrete_file_path = root_path + 'temp/' + self.sandbox.id + '/' + resource.name + '_' + \
                                              resource.model + '.cfg'
-                        config_file_mgr.create_file_from_template(template_path = config_path,
-                                                                  destination_path = concrete_file_path)
+                        concrete_file_path = concrete_file_path.replace('tftp://' + self.tftp_address + "/",'')
+                        concrete_file_path = concrete_file_path.replace(' ', '_')
+                        #TODO - CHeck why the upload doesn't create new directories on the tftp server
+                        tftp_client.upload(str(concrete_file_path), str(tmp_concrete_file.name))
+                        tmp_concrete_file.close()
+                        #tmp_concrete_file.delete()
                         config_path = concrete_file_path
-                        check_if_need_to_update_address=True
+                    except tftpy.TftpException:
+                        tmp_template_file.close()
+
                     self.sandbox.report_info(
                         'Loading configuration for device: ' + resource.name + ' from:' + config_path, write_to_output)
-                    resource.load_network_config(self.sandbox.id, config_path, config_type, restore_method)
-                    # If we changed the management ip address during the load of the config-
-                    # Update the resource's address in CloudShell by calling set_address()
-                    if config_stage.lower() == 'gold' or config_stage.lower() == 'snapshot':
-                        loaded_ip_address = resource.get_attribute("Gold management ip")
-                    elif config_stage.lower() == 'base':
-                        loaded_ip_address = resource.get_attribute("Base management ip")
-                    if is_resource_abstract and resource.address != loaded_ip_address:
-                        resource.set_address(loaded_ip_address)
-                        #TODO - Reset the driver/session to work with the new ip address
 
+                    resource.load_network_config(self.sandbox.id, config_path, config_type, restore_method)
                     self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Online')
                 except QualiError as qe:
                     err = "Failed to load configuration for device " + resource.name + ". " + str(qe)
                     self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
                     self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
-                except:
+                except :
                     err = "Failed to load configuration for device " + resource.name + \
-                          ". Unexpected error: " + str(sys.exc_info()[0])
+                          ". Unexpected error: " + traceback.format_exc()
                     self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
                     self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
 
@@ -137,7 +144,7 @@ class NetworkingSaveRestore():
                 if resource.model.lower() == ignore_model.lower():
                     save_config_from_device = False
                     break
-            if save_config_from_device == True:
+            if save_config_from_device:
                 try:
                     self.sandbox.report_info(
                         'Saving configuration for device: ' + resource.name + ' to: ' + config_path, write_to_output)
@@ -158,3 +165,22 @@ class NetworkingSaveRestore():
         # check if there is a directory with the Blueprint's name under the snapshots dir
         envDir = self.config_files_root + '/Snapshots/' + self.sandbox.Blueprint_name
         return os.path.isdir(envDir)
+
+    # ----------------------------------
+    # Check if need to load configuration to the given device
+    # A device should not be in the ignored models list,
+    # or should not have a "Disable Load Config" attribute set to True
+    # in order to load configuration on it
+    # ----------------------------------
+    def _is_load_config_to_device(self, resource, ignore_models=[]):
+        # check if the device is marked for not loading config during
+        try:
+            disable_load_config = resource.get_attribute("Disable Load Config")
+            if disable_load_config:
+                return False
+        except QualiError:  # if attribute not found then assume load config in enabled
+            pass
+        for ignore_model in ignore_models:
+            if resource.model.lower() == ignore_model.lower():
+                return False
+        return True
