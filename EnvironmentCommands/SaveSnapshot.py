@@ -16,8 +16,12 @@ saveNRestoreTool = NetworkingSaveRestore(sandbox)
 sandbox.clear_all_resources_live_status()
 try:
     #todo: get the snapshot's name as a parameter from the user
-    sandbox.save_sandbox_as_blueprint('test1')
-    saveNRestoreTool.save_config(snapshot_name='test1', config_type='Running', ignore_models=['Generic TFTP server'])
+    snapshot_name = 'test1'
+
+    sandbox.save_sandbox_as_blueprint(snapshot_name)
+    # replace spaces with _ in the snapshot's name
+    snapshot_name.replace(old=' ', new='_')
+    saveNRestoreTool.save_config(snapshot_name=snapshot_name, config_type='Running', ignore_models=['Generic TFTP server'])
 except QualiError as qe:
     logger.error("Save snapshot failed. " + str(qe))
 except:

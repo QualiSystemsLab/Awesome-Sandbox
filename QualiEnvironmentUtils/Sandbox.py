@@ -18,6 +18,8 @@ class SandboxBase(object):
             self.api_session = helpers.get_api_session()
             self.id = reservation_id
             self.Blueprint_name = helpers.get_reservation_context_details().environment_name
+            self.blueprint_details = self.api_session.GetTopologyDetails(self.Blueprint_name)
+
         except:
             err = "Failed to initialize the Sandbox. Unexpected error:" + \
                   str(sys.exc_info()[0])
@@ -61,21 +63,27 @@ class SandboxBase(object):
 
     # ----------------------------------
     def get_root_resources(self):
-        #       """
-        #       Get the root resources
-        #       :rtype: list[ResourceBase]
-        #       """
+        """
+            Get the root resources
+            :rtype: list[ResourceBase]
+        """
         root_resources = []
         root_resources_names_dict = {}
         resources = self.api_session.GetReservationDetails(self.id).ReservationDescription.Resources
-
+        topo_resources=self.api_session.GetReservationDetails(self.id).ReservationDescription.TopologiesReservedResources
         # Loop over all devices in the sandbox and add to a dictionary all root devices:
         for resource in resources:
+
             split_name = resource.Name.split('/')
             root_resources_names_dict[split_name[0]] = 1
         # instantiate a resource object for each root device
         for root_resource_name in root_resources_names_dict.keys():
-            root_resources.append(ResourceBase(root_resource_name))
+            root_resource_alias=''
+            for topo_resource in topo_resources:
+                if topo_resource.Name == root_resource_name:
+                    root_resource_alias = topo_resource.Alias
+                    break
+            root_resources.append(ResourceBase(root_resource_name, root_resource_alias))
 
         return root_resources
 
@@ -219,3 +227,32 @@ class SandboxBase(object):
             self.report_error(error_message=err, write_to_output_window=write_to_output)
         # save the current Sandbox as a new Blueprint with the given snapshot name
         self.api_session.SaveReservationAsTopology(self.id, topologyName=blueprint_name, includeInactiveRoutes=True)
+
+    # -----------------------------------------
+    # check if this resource originated from an abstract resource
+    # -----------------------------------------
+    def is_abstract(self, resource_alias):
+        for abstract_resource in self.blueprint_details.AbstractResources:
+                if resource_alias == abstract_resource.Alias :
+                        return True
+        return False
+
+    # -----------------------------------------
+    # Return the tftp resource of the sandbox, if found
+    # -----------------------------------------
+    def get_tftp_resource(self):
+        root_resources = self.get_root_resources()
+        for resource in root_resources:
+                if resource.model == 'Generic TFTP server':
+                    return resource
+        return None
+
+    # -----------------------------------------
+    # Return the pool resource of the sandbox, if found
+    #  -----------------------------------------
+    def get_config_set_pool_resource(self):
+        root_resources = self.get_root_resources()
+        for resource in root_resources:
+                if resource.model.lower() == 'config set pool':
+                    return resource
+        return None

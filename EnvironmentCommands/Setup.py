@@ -1,7 +1,8 @@
 from QualiEnvironmentUtils.Sandbox import *
 from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '1c12ace2-bf9e-4942-8fc0-31bde9515465',
+import tftpy
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'f810fc36-1206-40be-88bd-96cbfd2818ef',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -14,6 +15,7 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 sandbox = SandboxBase(reservation_id, logger)
 do_save_restore = True
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
+
 try:
     sandbox.clear_all_resources_live_status()
 
