@@ -23,10 +23,23 @@ class ResourceBase(object):
             self.details = self.api_session.GetResourceDetails(resource_name)
             self.name = self.details.Name
             self.address = self.details.Address
-            self.model = self.details.ResourceModelName
             self.commands = self.api_session.GetResourceCommands(resource_name).Commands
             self.attributes = self.details.ResourceAttributes
+            #If there is an attribute named 'model' take its value (exist in shells), otherwise take the family's model
+            try:
+                self.model = self.get_attribute('Model')
+            except QualiError:
+                self.model = self.details.ResourceModelName
+
             self.alias = resource_alias
+
+    # -----------------------------------------
+    # -----------------------------------------
+    def has_command(self, command_name):
+        for command in self.commands:
+            if command_name == command.Name:
+                return True
+        return False
 
 
     # -----------------------------------------
@@ -140,3 +153,5 @@ class ResourceBase(object):
     # -----------------------------------------
     def set_address(self, address):
         self.api_session.UpdateResourceAddress(resourceFullPath=self.name,resourceAddress=address)
+
+

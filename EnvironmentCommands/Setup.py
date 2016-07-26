@@ -1,5 +1,6 @@
 from QualiEnvironmentUtils.Sandbox import *
 from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
+from QualiEnvironmentUtils.Networking.NetworkingHealthCheck import *
 
 import tftpy
 dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'f810fc36-1206-40be-88bd-96cbfd2818ef',
@@ -15,9 +16,11 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
 sandbox = SandboxBase(reservation_id, logger)
 do_save_restore = True
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
+healthCheckTool = NetworkingHealthCheck(sandbox)
 
 try:
-    sandbox.clear_all_resources_live_status()
+    #sandbox.clear_all_resources_live_status()
+    healthCheckTool.devices_health_check(write_to_output=True)
 
     # TODO- Get the config set name from the orchestration's params
     config_set_name = ''
