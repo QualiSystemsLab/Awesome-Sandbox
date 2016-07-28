@@ -71,3 +71,39 @@ class NetworkingHealthCheck():
                     return "Mismatch"
         # If we got here this means those are devices that need validation, but the Adjacent attribute was not found
         return "Mismatch"
+
+
+   # ----------------------------------
+   # ----------------------------------
+    def devices_health_check(self,write_to_output=True):
+        """
+        Run the healthCheck command on all the devices and update the live status accordingly
+        """
+        try:
+            self.sandbox.clear_all_resources_live_status()
+
+            # loop over the root resources and run the HealthCheck command for devices that support the command
+            #Update the live status accordingly
+            root_resources = self.sandbox.get_root_resources()
+            for resource in root_resources:
+                if resource.has_command('HealthCheck'):
+                    try:
+                        #TODO: Assuming the shell's health check will set the live status on the device,
+                        # and return a detailed description in case of a failure
+                        out = resource.execute_command(self.sandbox.id,'HealthCheck',printOutput=write_to_output)
+                        if out != '':
+                            err = "Health check did not pass for device " + resource.name + ". " + str(qe)
+                            self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
+
+                    except QualiError as qe:
+                        err = "Health check did not pass for device " + resource.name + ". " + str(qe)
+                        self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
+
+
+        except QualiError as qe:
+            err = "Failed to run health check. " + str(qe)
+            self.sandbox.report_error(err)
+        except:
+            err = "Failed to run health check. Unexpected error: " + str(sys.exc_info()[0])
+            self.sandbox.report_error(err)
+
