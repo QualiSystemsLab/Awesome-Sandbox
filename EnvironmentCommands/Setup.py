@@ -3,7 +3,7 @@ from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 from QualiEnvironmentUtils.Networking.NetworkingHealthCheck import *
 
 import tftpy
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'f810fc36-1206-40be-88bd-96cbfd2818ef',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '7197cefc-d171-49b4-8399-ea8cf88d09dd',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -14,6 +14,7 @@ logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='Setup')
 
 sandbox = SandboxBase(reservation_id, logger)
+
 do_save_restore = True
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
 healthCheckTool = NetworkingHealthCheck(sandbox)
@@ -29,7 +30,7 @@ try:
                                      ignore_models=['Generic TFTP server'])
     else:
         saveNRestoreTool.load_config(config_stage='Gold', config_type='Running',
-                                     ignore_models=['Generic TFTP server'], config_set_name=config_set_name)
+                                     ignore_models=['Generic TFTP server','Config Set Pool'], config_set_name=config_set_name)
 
     # call activate_all_routes_and_connectors
     sandbox.activate_all_routes_and_connectors()

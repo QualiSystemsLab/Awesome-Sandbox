@@ -12,6 +12,10 @@ from cloudshell.core.logger.qs_logger import *
 # ===================================
 class SandboxBase(object):
     def __init__(self, reservation_id, logger):
+        """
+        Load the configuration from config files on the Blueprint's devices
+        :param str reservation_id:  reservation id
+        """
         try:
             self._logger = logger
             """:type : logging.Logger"""
@@ -243,7 +247,7 @@ class SandboxBase(object):
     def get_tftp_resource(self):
         root_resources = self.get_root_resources()
         for resource in root_resources:
-                if resource.model == 'Generic TFTP server':
+                if resource.model.lower() == 'generic tftp server':
                     return resource
         return None
 
