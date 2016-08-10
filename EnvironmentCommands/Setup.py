@@ -3,7 +3,7 @@ from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 from QualiEnvironmentUtils.Networking.NetworkingHealthCheck import *
 
 import tftpy
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'f810fc36-1206-40be-88bd-96cbfd2818ef',
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', 'b75b4d0e-02ee-45aa-9bd5-b3b4bba82445',
                             server_address='localhost', cloudshell_api_port='8029')
 
 # ----------------------------------
@@ -13,6 +13,7 @@ reservation_id = helpers.get_reservation_context_details().id
 logger = get_qs_logger(log_category='EnvironmentCommands',
                        log_group=reservation_id, log_file_prefix='Setup')
 
+print("\n#######\n## reservation_id"+ reservation_id )
 sandbox = SandboxBase(reservation_id, logger)
 do_save_restore = True
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
