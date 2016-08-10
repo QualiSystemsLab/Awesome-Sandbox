@@ -80,13 +80,14 @@ class NetworkingSaveRestore():
                 root_path = root_path + config_set_name + '/'
         elif config_stage.lower() == 'base':
             root_path = self.config_files_root + '/' + config_stage + '/'
+        #root_path = root_path + 'configs/'
         root_resources = self.sandbox.get_root_resources()
         """:type : list[ResourceBase]"""
         for resource in root_resources:
-            live_status = resource.api_session.GetResourceLiveStatus(resource.name)
             #Check if needs to load the onfig to the device
             load_config_to_device = self._is_load_config_to_device(resource, ignore_models=ignore_models)
             if load_config_to_device:
+                live_status = resource.api_session.GetResourceLiveStatus(resource.name).liveStatusName
                 if 'Error' == live_status:
                     self.sandbox.report_info(resource.name +
                                              'is not responding. Configuration will not be loaded to the device.',
@@ -126,7 +127,7 @@ class NetworkingSaveRestore():
                             config_path = concrete_file_path
                         # If we got exception - template file does not exeist. Close the temp file and try  to load
                         # configuration from a concrete config file
-                        except:# tftpy.TftpException:
+                        except tftpy.TftpException:
                             tmp_template_config_file.close()
                             tmp_template_config_file.delete()
 

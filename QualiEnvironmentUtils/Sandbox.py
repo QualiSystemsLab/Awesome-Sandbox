@@ -275,7 +275,7 @@ class SandboxBase(object):
     def get_tftp_resource(self):
         root_resources = self.get_root_resources()
         for resource in root_resources:
-                if resource.model == 'Generic TFTP server':
+                if resource.model.lower() == 'generic tftp server':
                     return resource
         return None
 
