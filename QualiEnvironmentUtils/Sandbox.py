@@ -13,6 +13,10 @@ from os.path import *
 # ===================================
 class SandboxBase(object):
     def __init__(self, reservation_id, logger):
+        """
+        Load the configuration from config files on the Blueprint's devices
+        :param str reservation_id:  reservation id
+        """
         try:
             self._logger = logger
             """:type : logging.Logger"""

@@ -62,13 +62,14 @@ class PoolManager(object):
     # -----------------------------------------
     def pool_data_to_dict(self):
         pool_data_dict = dict()
+        for attribute in self.pool_resource.attributes:
+            pool_data_dict['{ConfigPool.' + attribute.Name + '}'] = attribute.Value
         for resource_from_pool in self.pool_resource.details.ChildResources:
             split_name = resource_from_pool.Name.split('/')
             name_of_resource_from_pool = split_name[len(split_name)-1]
-            resource_attributes_dict = dict()
+            #resource_attributes_dict = dict()
             for attribute in resource_from_pool.ResourceAttributes:
-                resource_dict_key = 'configSetPool.' + name_of_resource_from_pool + '.' + attribute.Name
-                resource_attributes_dict[resource_dict_key] = attribute.Value
-            pool_data_dict[name_of_resource_from_pool] = resource_attributes_dict
-
+                resource_dict_key = '{ConfigPool.' + name_of_resource_from_pool + '.' + attribute.Name + '}'
+                #resource_attributes_dict[resource_dict_key] = attribute.Value
+                pool_data_dict[resource_dict_key] = attribute.Value
         return pool_data_dict
