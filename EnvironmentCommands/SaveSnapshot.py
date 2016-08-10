@@ -1,7 +1,7 @@
 from QualiEnvironmentUtils.Networking.NetworkingSaveNRestore import *
 
-dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '6d200cf7-6448-41fe-b9ed-5e4b363ccefb',
-                            server_address='localhost', cloudshell_api_port='8029')
+dev.attach_to_cloudshell_as('admin', 'admin', 'Global', '949d1769-5875-4aa3-955d-ba261386a285',
+                            server_address='localhost', cloudshell_api_port='8029',command_parameters={'name':'Snap13'})
 
 # ----------------------------------
 # save the snapshot
@@ -15,13 +15,15 @@ sandbox = SandboxBase(reservation_id, logger)
 saveNRestoreTool = NetworkingSaveRestore(sandbox)
 sandbox.clear_all_resources_live_status()
 try:
-    #todo: get the snapshot's name as a parameter from the user
-    snapshot_name = 'test1'
+
+    snapshot_name = os.environ['name']
 
     sandbox.save_sandbox_as_blueprint(snapshot_name)
     # replace spaces with _ in the snapshot's name
-    snapshot_name.replace(old=' ', new='_')
-    saveNRestoreTool.save_config(snapshot_name=snapshot_name, config_type='Running', ignore_models=['Generic TFTP server'])
+
+    snapshot_name = snapshot_name.replace(' ','_')
+
+    saveNRestoreTool.save_config(snapshot_name=snapshot_name, config_type='running', ignore_models=['Generic TFTP server'])
 except QualiError as qe:
     logger.error("Save snapshot failed. " + str(qe))
 except:

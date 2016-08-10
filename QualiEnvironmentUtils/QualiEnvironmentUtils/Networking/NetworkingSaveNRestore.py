@@ -18,8 +18,8 @@ class NetworkingSaveRestore():
         tftp_resource = self.sandbox.get_tftp_resource()
         if tftp_resource is not None:
             self.tftp_address = tftp_resource.address
-            self.tftp_port = int(tftp_resource.get_attribute('TFTP Port'))
-            self.tftp_server_destination_path = tftp_resource.get_attribute("TFTP Network configs")
+            self.tftp_port = tftp_resource.get_attribute('TFTP Port')
+            self.tftp_server_destination_path = tftp_resource.get_attribute("TFTP Network Configs")
             self.tftp_map_drive = tftp_resource.get_attribute("TFTP Drive")
             if self.tftp_server_destination_path != "":
                 self.config_files_root = 'tftp://' + tftp_resource.address + "/" + self.tftp_server_destination_path
@@ -80,71 +80,59 @@ class NetworkingSaveRestore():
                 root_path = root_path + config_set_name + '/'
         elif config_stage.lower() == 'base':
             root_path = self.config_files_root + '/' + config_stage + '/'
-        #root_path = root_path + 'configs/'
         root_resources = self.sandbox.get_root_resources()
         """:type : list[ResourceBase]"""
         for resource in root_resources:
+            live_status = resource.api_session.GetResourceLiveStatus(resource.name)
             #Check if needs to load the onfig to the device
             load_config_to_device = self._is_load_config_to_device(resource, ignore_models=ignore_models)
             if load_config_to_device:
-                live_status = resource.api_session.GetResourceLiveStatus(resource.name).liveStatusName
                 if 'Error' == live_status:
-                    self.sandbox.report_info(resource.name +
-                                             'is not responding. Configuration will not be loaded to the device.',
-                                             write_to_output_window=True)
+                    self.sandbox.report_info(resource.name + 'is not responding. Configuration will not be loaded to the device.',write_to_output_window=True)
                 else:
-                    try:
-                        config_path = root_path + resource.alias + '_' + resource.model + '.cfg'
-
-                        # Look for a template config file
-                        tmp_template_config_file = tempfile.NamedTemporaryFile(delete=False)
-                        tftp_template_config_path = root_path + resource.alias + '_' + resource.model + '.tm'
-                        tftp_template_config_path = tftp_template_config_path.replace('tftp://' + self.tftp_address + "/", '')
-                        tftp_template_config_path = str(unicode(tftp_template_config_path.replace(' ', '_')))
+                    if load_config_to_device:
                         try:
-                            tftp_client.download(tftp_template_config_path, tmp_template_config_file.name)
-                            with open(tmp_template_config_file.name, 'r') as content_file:
-                                tmp_template_config_file_data = content_file.read()
-                            concrete_config_data = config_file_mgr.create_concrete_config_from_template(tmp_template_config_file_data,
-                                                                                 config_set_pool_data,resource)
-                            tmp_concrete_config_file = tempfile.NamedTemporaryFile(delete=False)
-                            tf = file(tmp_concrete_config_file.name,'wb+')
-                            tf.write(concrete_config_data)
-                            tf.flush()
-                            tf.close()
-                            tmp_template_config_file.close()
-                            tmp_template_config_file.delete()
-                            short_Reservation_id=self.sandbox.id[len(self.sandbox.id)-4:len(self.sandbox.id)]
-                            concrete_file_path = root_path + 'temp/' + short_Reservation_id + '_' + resource.alias + '_' + \
-                                                 resource.model + '.cfg'
-                            concrete_file_path = concrete_file_path.replace('tftp://' + self.tftp_address + "/",'')
-                            concrete_file_path = concrete_file_path.replace(' ', '_')
-                            #TODO - clean the temp dir on the tftp server
-                            tftp_client.upload(str(unicode(concrete_file_path)), str(tmp_concrete_config_file.name))
-                            tmp_concrete_config_file.close()
-                            tmp_concrete_config_file.delete()
-                            # Set the path to the new concrete file
-                            config_path = concrete_file_path
-                        # If we got exception - template file does not exeist. Close the temp file and try  to load
-                        # configuration from a concrete config file
-                        except tftpy.TftpException:
-                            tmp_template_config_file.close()
-                            tmp_template_config_file.delete()
+                            config_path = root_path + resource.alias + '_' + resource.model + '.cfg'
 
-                        self.sandbox.report_info(
-                            'Loading configuration for device: ' + resource.name + ' from:' + config_path, write_to_output)
+                            # Look for a template config file
+                            tmp_template_file = tempfile.NamedTemporaryFile(delete=False)
+                            tftp_template_config_path = root_path + resource.alias + '_' + resource.model + '.tm'
+                            tftp_template_config_path = tftp_template_config_path.replace('tftp://' + self.tftp_address + "/", '')
+                            tftp_template_config_path = tftp_template_config_path.replace(' ', '_')
+                            try:
+                                tftp_client.download(str(tftp_template_config_path), str(tmp_template_file.name))
+                                tmp_concrete_file = tempfile.NamedTemporaryFile(delete=False)
+                                config_file_mgr.create_concrete_config_from_template(tmp_template_file,
+                                                                                     tmp_concrete_file,
+                                                                                     config_set_pool_data)
+                                tmp_template_file.close()
+                                #tmp_template_file.delete()
+                                concrete_file_path = root_path + 'temp/' + self.sandbox.id + '/' + resource.name + '_' + \
+                                                     resource.model + '.cfg'
+                                concrete_file_path = concrete_file_path.replace('tftp://' + self.tftp_address + "/",'')
+                                concrete_file_path = concrete_file_path.replace(' ', '_')
+                                #TODO - CHeck why the upload doesn't create new directories on the tftp server
+                                tftp_client.upload(str(concrete_file_path), str(tmp_concrete_file.name))
+                                tmp_concrete_file.close()
+                                #tmp_concrete_file.delete()
+                                config_path = concrete_file_path
+                            except: #tftpy.TftpException:
+                                tmp_template_file.close()
 
-                        resource.load_network_config(self.sandbox.id, config_path, config_type, restore_method)
-                        self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Online')
-                    except QualiError as qe:
-                        err = "Failed to load configuration for device " + resource.name + ". " + str(qe)
-                        self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
-                        self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
-                    except :
-                        err = "Failed to load configuration for device " + resource.name + \
-                              ". Unexpected error: " + traceback.format_exc()
-                        self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
-                        self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
+                            self.sandbox.report_info(
+                                'Loading configuration for device: ' + resource.name + ' from:' + config_path, write_to_output)
+
+                            resource.load_network_config(self.sandbox.id, config_path, config_type, restore_method)
+                            self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Online')
+                        except QualiError as qe:
+                            err = "Failed to load configuration for device " + resource.name + ". " + str(qe)
+                            self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
+                            self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
+                        except :
+                            err = "Failed to load configuration for device " + resource.name + \
+                                  ". Unexpected error: " + traceback.format_exc()
+                            self.sandbox.report_error(err, write_to_output_window=write_to_output, raise_error=False)
+                            self.sandbox.api_session.SetResourceLiveStatus(resource.name, 'Error')
 
 
     # ----------------------------------
@@ -157,10 +145,10 @@ class NetworkingSaveRestore():
         """
         root_resources = self.sandbox.get_root_resources()
 
-     #   new_config_path = self.tftp_map_drive + '/Snapshots/' + snapshot_name
+        new_config_path = self.tftp_map_drive + '/Snapshots/' + snapshot_name
 
-     #   windows_server_path = self.tftp_server_destination_path.replace("/","\\")
-     #   new_config_path =  "\\\\" + self.tftp_address + "\\" + windows_server_path + "\Snapshots\\" + snapshot_name
+        windows_server_path = self.tftp_server_destination_path.replace("/","\\")
+        new_config_path =  "\\\\" + self.tftp_address + "\\" + windows_server_path + "\Snapshots\\" + snapshot_name
         #config_path = 'Z:/Configs/snapshots/Snap12'
 
         #config_path = self.config_files_root + '/snapshots/' + self.sandbox.Blueprint_name
@@ -168,7 +156,7 @@ class NetworkingSaveRestore():
         #if not os.path.exists(new_config_path):
         #    os.makedirs(new_config_path)
 
-        config_path = self.config_files_root + '/Snapshots/' + snapshot_name
+        config_path = self.config_files_root + '/snapshots/' + snapshot_name
 
         # TODO: check - do I need to create the snapshot folder on the tfp server if it doesn't exist?
         for resource in root_resources:

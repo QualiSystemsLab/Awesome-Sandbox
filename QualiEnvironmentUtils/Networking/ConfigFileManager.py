@@ -1,5 +1,5 @@
 # coding=utf-8
-from Sandbox import *
+from QualiEnvironmentUtils.Sandbox import *
 import tftpy
 
 

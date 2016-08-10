@@ -13,10 +13,6 @@ from os.path import *
 # ===================================
 class SandboxBase(object):
     def __init__(self, reservation_id, logger):
-        """
-        Load the configuration from config files on the Blueprint's devices
-        :param str reservation_id:  reservation id
-        """
         try:
             self._logger = logger
             """:type : logging.Logger"""
@@ -275,7 +271,7 @@ class SandboxBase(object):
     def get_tftp_resource(self):
         root_resources = self.get_root_resources()
         for resource in root_resources:
-                if resource.model.lower() == 'generic tftp server':
+                if resource.model == 'Generic TFTP server':
                     return resource
         return None
 
